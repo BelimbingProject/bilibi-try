@@ -1,0 +1,32 @@
+--- a/scripts/install-server.sh
++++ b/scripts/install-server.sh
+@@ -590,5 +590,2 @@
+-# verify_provenance <artifact> <repository> <repository id> <tag>: GitHub
+-# verifies the file's digest, signing repository, release workflow and tag, and
+-# the signing repository's number must equal the expected one. Public
+-# repositories do not need a login. For a private repository, pass its read
+-# token as GH_TOKEN; it is inherited only by this command and is never printed.
++# The trial uses public attestation bundles and a trusted root provisioned
++# independently of the release. No GitHub account is needed on this server.
+@@ -596,4 +593 @@
+-    local artifact=$1 repository=$2 repository_id=$3 tag=$4 ids id found=0
+-    command -v gh >/dev/null || fail 'GitHub CLI is not installed, so release provenance cannot be checked' 'rerun create to install the server packages, then retry'
+-    valid_repository "$repository" || fail 'the release repository must be owner/name'
+-    valid_setup_tag "$tag" || fail 'the release tag must be setup-vX.Y.Z'
++    local artifact=$1 repository=$2 repository_id=$3 tag=$4
+@@ -601,11 +595,4 @@
+-    ids=$(gh attestation verify "$artifact" --repo "$repository" \
+-        --signer-workflow "$repository/.github/workflows/release.yml" \
+-        --source-ref "refs/tags/$tag" \
+-        --format json --jq '.[].verificationResult.signature.certificate.sourceRepositoryIdentifier' 2>>"$log") ||
+-        fail "GitHub build provenance did not verify for $repository tag $tag; nothing was installed" 'download the asset from the official Release setup workflow and retry'
+-    while IFS= read -r id; do
+-        [[ -n $id ]] || continue
+-        found=1
+-        [[ $id == "$repository_id" ]] || fail "the release was signed by a different GitHub repository number than $repository_id; nothing was installed" 'use the asset from the repository you intend, or check the --repo-id you gave'
+-    done <<<"$ids"
+-    ((found)) || fail "GitHub returned no verified provenance for $repository tag $tag; nothing was installed" 'download the asset from the official Release setup workflow and retry'
++    python3 "$here/verify-public-provenance.py" "$artifact" \
++        --repo "$repository" --repo-id "$repository_id" --tag "$tag" \
++        --trusted-root /etc/bilibi/attestation-trusted-root.jsonl 2>>"$log" ||
++        fail "GitHub build provenance did not verify for $repository tag $tag; nothing was installed" "verify the trusted root and release asset, then see $log"

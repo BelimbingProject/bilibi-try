@@ -111,6 +111,16 @@ def main():
                                            relative == 'scripts/waiting-page.html' or
                                            relative.startswith(('scripts/lib/', 'scripts/server/'))):
                 tool_files[relative] = (path.read_bytes(), 0o755 if path.suffix == '.sh' else 0o644)
+    # Keep the pinned server tooling and adapt its public provenance check.
+    # A Platform change to that check must be reviewed before the patch applies.
+    installer_script = recipe.PLATFORM / 'scripts/install-server.sh'
+    provenance_patch = recipe.ROOT / 'scripts/server-tools/public-provenance.patch'
+    patched = subprocess.run(['patch', '--quiet', '--batch', '--forward', '--fuzz=0',
+                              '--output=-', str(installer_script), str(provenance_patch)],
+                             check=True, stdout=subprocess.PIPE).stdout
+    tool_files['scripts/install-server.sh'] = (patched, 0o755)
+    verifier = recipe.ROOT / 'scripts/verify-public-provenance.py'
+    tool_files['scripts/verify-public-provenance.py'] = (verifier.read_bytes(), 0o644)
     archive(output / 'bilibi-server-tools.tar.gz', tool_files, epoch)
     (output / 'recipe.json').write_bytes(json_bytes(metadata))
     (output / 'builder-packages.txt').write_bytes(Path('/builder-packages.txt').read_bytes())
