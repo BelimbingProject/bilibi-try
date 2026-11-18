@@ -5,6 +5,13 @@ usage() {
     printf 'Usage: %s INSTANCE COMPANY_NAME COMPANY_CODE OWNER_EMAIL [COMPANY_NAME COMPANY_CODE OWNER_EMAIL]\n' "$0"
 }
 
+comparison_key() {
+    local value=$1
+    value=${value#"${value%%[![:space:]]*}"}
+    value=${value%"${value##*[![:space:]]}"}
+    printf '%s' "${value,,}"
+}
+
 if [[ $# == 1 && $1 == --help ]]; then
     usage
     exit 0
@@ -19,7 +26,8 @@ for argument in "$@"; do
         exit 2
     fi
 done
-if [[ $# == 7 && ( ${2,,} == "${5,,}" || ${4,,} == "${7,,}" ) ]]; then
+if [[ $# == 7 && ( $(comparison_key "$2") == "$(comparison_key "$5")" ||
+                   $(comparison_key "$4") == "$(comparison_key "$7")" ) ]]; then
     printf 'Use different names and owner email addresses for the two companies.\n' >&2
     exit 2
 fi
