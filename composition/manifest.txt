@@ -1,7 +1,7 @@
 # Written by scripts/discover-modules.py --pin; read by --restore and apps/web/build.rs.
-platform = "b5c4ad771daa8430ce2b4dfccb7bb8a503fd18ae"
+platform = "d0cd6bb6ad5b70aec79ff4bdfe41dd807dc1c7a9"
 platform_version = "0.2.1"
-cargo_lock_sha256 = "2875cd061cb4b3d7b23a0afdae0d94f7fdb28638a2398e93152ac4c649d4d9f7"
+cargo_lock_sha256 = "2b11dbad7b54f6959b4fcf9f7ed1d092cbafbbcb2266def2a67cfd0155907509"
 
 [containers]
 
@@ -12,13 +12,13 @@ head = "f605dc0985b534b24e607b56c8455b1fa7b32da5"
 head = "49b3bc58dab5380de39932509c4feaa2685455af"
 
 [containers."domains/finance"]
-head = "358119741dc76b73cfee5801d5d75ac73190d39b"
+head = "0e28a484bfcacd0196279a82cebbd6c1146c3d70"
 
 [containers."domains/people"]
-head = "d63176bf6ad25eeb9bd229c6cfcf07e03bb1b823"
+head = "fa7f185745d9c91530fe53fba2dd841d948b5bcd"
 
 [containers."domains/people_connector"]
 head = "a00261a3aa48160d3b130cf8748af83dba30b454"
 
 [containers."domains/supply_chain"]
-head = "f860a40d6b74c4a5d87e4b420a3b70bdae8e5046"
+head = "8773535b5e12baeeac7cfc0f2daaaf862b1cb487"
