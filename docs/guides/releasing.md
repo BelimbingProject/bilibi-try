@@ -69,7 +69,7 @@ gh-axi release download setup-v1.0.0 --repo YOUR-ORGANISATION/YOUR-SETUP --dir d
 python3 scripts/publish.py publish --tag setup-v1.0.0 --repository YOUR-ORGANISATION/YOUR-SETUP
 ```
 
-The script checks the tagged commit, local checksums, GitHub asset digests and repository immutability before publishing. It then requires GitHub to report an immutable release. A `setup-vX.Y.Z-test` tag runs the same build but must stay a draft; delete the draft and tag after testing.
+The script checks the tagged commit, local checksums, GitHub asset digests and repository immutability before publishing. It then requires GitHub to report an immutable release.
 
 ## What the release contains
 
