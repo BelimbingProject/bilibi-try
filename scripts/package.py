@@ -13,6 +13,10 @@ import tarfile
 import recipe
 
 
+# Match Base Software's MAX_BUNDLE_BYTES in apps/base/software/src/transport.rs.
+MAX_BUNDLE_BYTES = 1024 * 1024 * 1024
+
+
 def json_bytes(value):
     return (json.dumps(value, sort_keys=True, indent=2) + '\n').encode()
 
@@ -85,7 +89,7 @@ def main():
     import hashlib
     sums = ''.join(f'{hashlib.sha256(data).hexdigest()}  {name}\n' for name, (data, _) in sorted(contents.items()))
     contents['SHA256SUMS'] = (sums.encode(), 0o644)
-    if sum(len(data) for data, _ in contents.values()) > 1024 * 1024 * 1024:
+    if sum(len(data) for data, _ in contents.values()) > MAX_BUNDLE_BYTES:
         raise ValueError('Payload exceeds the existing Bilibi unpack limit of 1 GiB')
     output = recipe.ROOT / 'dist'
     if output.exists() and any(output.iterdir()):
@@ -93,8 +97,8 @@ def main():
     output.mkdir(exist_ok=True)
     app_asset = output / f'bilibi-{args.tag}-{recipe.TARGET}.tar.gz'
     archive(app_asset, contents, epoch)
-    if app_asset.stat().st_size > 64 * 1024 * 1024:
-        raise ValueError('Archive exceeds the existing Bilibi upload limit of 64 MiB')
+    if app_asset.stat().st_size > MAX_BUNDLE_BYTES:
+        raise ValueError('Archive exceeds the Bilibi release download limit of 1 GiB')
     installer = output / f'bilibi-installer-{recipe.TARGET}'
     installer.write_bytes((binary_dir / 'bilibi-installer').read_bytes())
     installer.chmod(0o755)

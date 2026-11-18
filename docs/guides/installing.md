@@ -6,7 +6,7 @@ Install the same tested release on Staging and Production.
 
 On a trusted workstation, get a current Sigstore trusted root with `gh attestation trusted-root > trusted-root.jsonl`. Copy that file and `scripts/verify-public-provenance.py` from this reviewed application checkout to the server separately from the release assets. The server needs Python 3.11 or newer, the Python Snappy package (`sudo apt install python3-snappy` on Ubuntu), and a current GitHub CLI from the [official package repository](https://github.com/cli/cli/blob/trunk/docs/install_linux.md). The CLI uses the transferred trust root and the public GitHub attestation bundles without a GitHub login.
 
-Download the server tools, application archive and installer from the chosen GitHub release. Set `tag` to its exact setup tag. Verify the server tools before extracting them:
+Download the server tools, application archive and installer from the chosen GitHub release. Set `tag` to its exact setup tag and verify the server tools before extraction.
 
 ```sh
 tag=setup-vX.Y.Z
@@ -15,7 +15,7 @@ python3 verify-public-provenance.py bilibi-server-tools.tar.gz \
   --tag "$tag" --trusted-root trusted-root.jsonl
 ```
 
-After verification succeeds, install the trusted root where the packaged installer reads it and extract the archive into an empty directory:
+After verification succeeds, install the trusted root and extract the tools into an empty directory.
 
 ```sh
 sudo install -D -m 0644 trusted-root.jsonl /etc/bilibi/attestation-trusted-root.jsonl
