@@ -38,6 +38,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--tag', required=True)
     parser.add_argument('--repository', required=True)
+    parser.add_argument('--output-dir', type=Path, default=recipe.ROOT / 'dist')
     args = parser.parse_args()
     if not re.fullmatch(r'setup-v\d+\.\d+\.\d+(?:-test)?', args.tag):
         parser.error('Tag must be setup-vX.Y.Z or setup-vX.Y.Z-test')
@@ -91,7 +92,7 @@ def main():
     contents['SHA256SUMS'] = (sums.encode(), 0o644)
     if sum(len(data) for data, _ in contents.values()) > MAX_BUNDLE_BYTES:
         raise ValueError('Payload exceeds the existing Bilibi unpack limit of 1 GiB')
-    output = recipe.ROOT / 'dist'
+    output = args.output_dir
     if output.exists() and any(output.iterdir()):
         raise ValueError('dist must be empty; move the previous release aside first')
     output.mkdir(exist_ok=True)
