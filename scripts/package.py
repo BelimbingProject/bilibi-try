@@ -126,6 +126,8 @@ def main():
     tool_files['scripts/install-server.sh'] = (patched, 0o755)
     verifier = recipe.ROOT / 'scripts/verify-public-provenance.py'
     tool_files['scripts/verify-public-provenance.py'] = (verifier.read_bytes(), 0o644)
+    company_setup = recipe.ROOT / 'scripts/server-tools/setup-trial-companies.sh'
+    tool_files['scripts/setup-trial-companies.sh'] = (company_setup.read_bytes(), 0o755)
     archive(output / 'bilibi-server-tools.tar.gz', tool_files, epoch)
     (output / 'recipe.json').write_bytes(json_bytes(metadata))
     (output / 'builder-packages.txt').write_bytes(Path('/builder-packages.txt').read_bytes())
