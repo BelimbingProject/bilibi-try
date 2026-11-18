@@ -1,6 +1,24 @@
 # Written by scripts/discover-modules.py --pin; read by --restore and apps/web/build.rs.
-platform = "9c3fb25b681df93cf96e1114fbe90b47724f13e6"
-platform_version = "0.1.1"
-cargo_lock_sha256 = "9aa142151d1f5d5fc46f0c8130719e0a75fbe59d60cab6b059d9792c485beb6f"
+platform = "b5c4ad771daa8430ce2b4dfccb7bb8a503fd18ae"
+platform_version = "0.2.1"
+cargo_lock_sha256 = "2875cd061cb4b3d7b23a0afdae0d94f7fdb28638a2398e93152ac4c649d4d9f7"
 
 [containers]
+
+[containers."domains/commerce"]
+head = "f605dc0985b534b24e607b56c8455b1fa7b32da5"
+
+[containers."domains/factory"]
+head = "49b3bc58dab5380de39932509c4feaa2685455af"
+
+[containers."domains/finance"]
+head = "358119741dc76b73cfee5801d5d75ac73190d39b"
+
+[containers."domains/people"]
+head = "d63176bf6ad25eeb9bd229c6cfcf07e03bb1b823"
+
+[containers."domains/people_connector"]
+head = "a00261a3aa48160d3b130cf8748af83dba30b454"
+
+[containers."domains/supply_chain"]
+head = "f860a40d6b74c4a5d87e4b420a3b70bdae8e5046"
