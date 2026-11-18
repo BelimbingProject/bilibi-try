@@ -13,6 +13,10 @@ import tarfile
 import recipe
 
 
+# Match Base Software's MAX_BUNDLE_BYTES in apps/base/software/src/transport.rs.
+MAX_BUNDLE_BYTES = 1024 * 1024 * 1024
+
+
 def json_bytes(value):
     return (json.dumps(value, sort_keys=True, indent=2) + '\n').encode()
 
@@ -34,6 +38,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--tag', required=True)
     parser.add_argument('--repository', required=True)
+    parser.add_argument('--output-dir', type=Path, default=recipe.ROOT / 'dist')
     args = parser.parse_args()
     if not re.fullmatch(r'setup-v\d+\.\d+\.\d+(?:-test)?', args.tag):
         parser.error('Tag must be setup-vX.Y.Z or setup-vX.Y.Z-test')
@@ -85,16 +90,16 @@ def main():
     import hashlib
     sums = ''.join(f'{hashlib.sha256(data).hexdigest()}  {name}\n' for name, (data, _) in sorted(contents.items()))
     contents['SHA256SUMS'] = (sums.encode(), 0o644)
-    if sum(len(data) for data, _ in contents.values()) > 1024 * 1024 * 1024:
+    if sum(len(data) for data, _ in contents.values()) > MAX_BUNDLE_BYTES:
         raise ValueError('Payload exceeds the existing Bilibi unpack limit of 1 GiB')
-    output = recipe.ROOT / 'dist'
+    output = args.output_dir
     if output.exists() and any(output.iterdir()):
         raise ValueError('dist must be empty; move the previous release aside first')
     output.mkdir(exist_ok=True)
     app_asset = output / f'bilibi-{args.tag}-{recipe.TARGET}.tar.gz'
     archive(app_asset, contents, epoch)
-    if app_asset.stat().st_size > 64 * 1024 * 1024:
-        raise ValueError('Archive exceeds the existing Bilibi upload limit of 64 MiB')
+    if app_asset.stat().st_size > MAX_BUNDLE_BYTES:
+        raise ValueError('Archive exceeds the Bilibi release download limit of 1 GiB')
     installer = output / f'bilibi-installer-{recipe.TARGET}'
     installer.write_bytes((binary_dir / 'bilibi-installer').read_bytes())
     installer.chmod(0o755)
@@ -111,6 +116,16 @@ def main():
                                            relative == 'scripts/waiting-page.html' or
                                            relative.startswith(('scripts/lib/', 'scripts/server/'))):
                 tool_files[relative] = (path.read_bytes(), 0o755 if path.suffix == '.sh' else 0o644)
+    # Keep the pinned server tooling and adapt its public provenance check.
+    # A Platform change to that check must be reviewed before the patch applies.
+    installer_script = recipe.PLATFORM / 'scripts/install-server.sh'
+    provenance_patch = recipe.ROOT / 'scripts/server-tools/public-provenance.patch'
+    patched = subprocess.run(['patch', '--quiet', '--batch', '--forward', '--fuzz=0',
+                              '--output=-', str(installer_script), str(provenance_patch)],
+                             check=True, stdout=subprocess.PIPE).stdout
+    tool_files['scripts/install-server.sh'] = (patched, 0o755)
+    verifier = recipe.ROOT / 'scripts/verify-public-provenance.py'
+    tool_files['scripts/verify-public-provenance.py'] = (verifier.read_bytes(), 0o644)
     archive(output / 'bilibi-server-tools.tar.gz', tool_files, epoch)
     (output / 'recipe.json').write_bytes(json_bytes(metadata))
     (output / 'builder-packages.txt').write_bytes(Path('/builder-packages.txt').read_bytes())

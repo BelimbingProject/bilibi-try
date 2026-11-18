@@ -2,6 +2,29 @@
 
 Install the same tested release on Staging and Production.
 
+## First install on a public trial server
+
+On a trusted workstation, get a current Sigstore trusted root with `gh attestation trusted-root > trusted-root.jsonl`. Copy that file and `scripts/verify-public-provenance.py` from this reviewed application checkout to the server separately from the release assets. The server needs Python 3.11 or newer, the Python Snappy package (`sudo apt install python3-snappy` on Ubuntu), and a current GitHub CLI from the [official package repository](https://github.com/cli/cli/blob/trunk/docs/install_linux.md). The CLI uses the transferred trust root and the public GitHub attestation bundles without a GitHub login.
+
+Download the server tools, application archive and installer from the chosen GitHub release. Set `tag` to its exact setup tag and verify the server tools before extraction.
+
+```sh
+tag=setup-vX.Y.Z
+python3 verify-public-provenance.py bilibi-server-tools.tar.gz \
+  --repo BelimbingProject/bilibi-try --repo-id 1462459642 \
+  --tag "$tag" --trusted-root trusted-root.jsonl
+```
+
+After verification succeeds, install the trusted root and extract the tools into an empty directory.
+
+```sh
+sudo install -D -m 0644 trusted-root.jsonl /etc/bilibi/attestation-trusted-root.jsonl
+mkdir server-tools
+tar -xzf bilibi-server-tools.tar.gz -C server-tools
+```
+
+Use the packaged `server-tools/scripts/install-server.sh` and follow the [Platform server installation guide](https://github.com/BelimbingProject/bilibi/blob/main/docs/server-install.md#the-short-version). Pass `--repo BelimbingProject/bilibi-try --repo-id 1462459642 --tag "$tag"` to both the `release` and `installer` commands. The trial's packaged tools verify each artifact against the same repository number, signing workflow, tag and trusted root.
+
 ## Install a release
 
 Set the Software page's **GitHub repository** setting to your own application repository, for example `your-company/my-bilibi`. The server reads its releases from that repository.

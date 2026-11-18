@@ -17,7 +17,7 @@ Sign in at the HTTPS address printed by the launcher. The first start builds the
 
 Merge the checked setup record to `main`. An organization owner can then cut a `setup-vX.Y.Z` tag using the [release guide](docs/guides/releasing.md#release-your-setup). GitHub Actions builds the pinned application, publishes SHA-256 checksums and GitHub build provenance, and stages the assets in a draft. The organization owner verifies and publishes the immutable release.
 
-Install the published archive, installer and verified server tools with the [Bilibi server installation guide](https://github.com/BelimbingProject/bilibi/blob/main/docs/server-install.md). The server runs the released binaries. Tenant and account data are entered on the installed server.
+Follow the [public server setup steps](docs/guides/installing.md#first-install-on-a-public-trial-server) to verify the published tools and install the released binaries. Tenant and account data are entered on the installed server.
 
 ## Guides
 
