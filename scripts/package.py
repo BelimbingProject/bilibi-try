@@ -40,8 +40,8 @@ def main():
     parser.add_argument('--repository', required=True)
     parser.add_argument('--output-dir', type=Path, default=recipe.ROOT / 'dist')
     args = parser.parse_args()
-    if not re.fullmatch(r'setup-v\d+\.\d+\.\d+(?:-test)?', args.tag):
-        parser.error('Tag must be setup-vX.Y.Z or setup-vX.Y.Z-test')
+    if not re.fullmatch(r'(?:setup-v\d+\.\d+\.\d+(?:-test)?|nightly-\d{4}-\d{2}-\d{2})', args.tag):
+        parser.error('Tag must be setup-vX.Y.Z, setup-vX.Y.Z-test or nightly-YYYY-MM-DD')
     if not re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+', args.repository):
         parser.error('Repository must be owner/name')
     if recipe.run('git', 'status', '--porcelain', cwd=recipe.ROOT, capture=True).strip():
@@ -65,7 +65,11 @@ def main():
         raise ValueError('The setup tag must name the checked-out recipe commit')
     epoch = int(recipe.run('git', 'show', '-s', '--format=%ct', 'HEAD', cwd=recipe.ROOT, capture=True))
     sources, _ = recipe.recipe()
-    setup = {'repository': args.repository, 'commit': commit, 'tag': args.tag, 'sources': sources}
+    released = (args.tag.removeprefix('nightly-') if args.tag.startswith('nightly-') else
+                recipe.run('git', 'for-each-ref', '--format=%(creatordate:short)',
+                           f'refs/tags/{args.tag}', cwd=recipe.ROOT, capture=True).strip())
+    setup = {'repository': args.repository, 'commit': commit, 'tag': args.tag, 'sources': sources,
+             'released': released}
     metadata = {
         'format': 1, 'setup': setup, 'toolchain': toolchain, 'builder': builder,
         'platform': {'version': record['platform_version'], 'commit': record['platform'], 'release': record.get('platform_tag')},

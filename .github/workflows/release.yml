@@ -2,13 +2,53 @@ name: Release setup
 on:
   push:
     tags: ['setup-v*']
+  schedule:
+    - cron: '0 23 * * *'
+  workflow_dispatch:
 permissions:
   contents: read
 concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: false
 jobs:
+  prepare-nightly:
+    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.ref_type == 'branch')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      actions: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24.6.0'
+      - run: npm ci --prefix scripts/github-tools --no-audit --no-fund --ignore-scripts
+      - name: Record current main sources
+        env:
+          GIT_TERMINAL_PROMPT: '0'
+        run: |
+          python3 scripts/nightly-sources.py
+          python3 scripts/recipe.py materialize
+          scripts/builder.sh python3 scripts/recipe.py record-candidate
+          python3 scripts/recipe.py check-record
+      - name: Tag the generated record and start its signed build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="nightly-$(TZ=Asia/Kuala_Lumpur date +%F)"
+          git config user.name kiatng
+          git config user.email 1106470+kiatng@users.noreply.github.com
+          git add setup.toml composition/manifest.txt composition/Cargo.lock
+          git commit --allow-empty -m "Record sources for $tag"
+          git tag "$tag"
+          git push origin "refs/tags/$tag"
+          export PATH="$PWD/scripts/github-tools/node_modules/.bin:$PATH"
+          gh-axi api POST "/repos/$GITHUB_REPOSITORY/actions/workflows/release.yml/dispatches" --field "ref=$tag"
   guard:
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.ref_type == 'tag')
     name: Tag is on the default branch
     runs-on: ubuntu-24.04
     timeout-minutes: 5
@@ -22,15 +62,19 @@ jobs:
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
-          [[ "$RELEASE_TAG" =~ ^setup-v[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
-            echo 'Release tags must be setup-vX.Y.Z.' >&2
-            exit 1
-          }
           git fetch --no-tags origin "+refs/heads/$DEFAULT_BRANCH:refs/remotes/origin/$DEFAULT_BRANCH"
-          git merge-base --is-ancestor "$GITHUB_SHA" "origin/$DEFAULT_BRANCH" || {
-            echo "Release tag $RELEASE_TAG does not point to a commit on $DEFAULT_BRANCH." >&2
-            exit 1
-          }
+          if [[ "$RELEASE_TAG" =~ ^setup-v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            git merge-base --is-ancestor "$GITHUB_SHA" "origin/$DEFAULT_BRANCH"
+          elif [[ "$RELEASE_TAG" =~ ^nightly-[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+            git merge-base --is-ancestor "$GITHUB_SHA^" "origin/$DEFAULT_BRANCH"
+            [[ $(git rev-list --parents -n 1 "$GITHUB_SHA" | wc -w) == 2 ]]
+            git diff --name-only "$GITHUB_SHA^" "$GITHUB_SHA" | while IFS= read -r file; do
+              case "$file" in setup.toml|composition/manifest.txt|composition/Cargo.lock) ;; *) exit 1 ;; esac
+            done
+            python3 scripts/nightly-sources.py --verify
+          else
+            echo 'Invalid release tag.' >&2; exit 1
+          fi
   # The tag contains the complete build record. Never choose newer source commits here.
   build:
     needs: guard
@@ -83,7 +127,11 @@ jobs:
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
           export PATH="$PWD/scripts/github-tools/node_modules/.bin:$PATH"
-          python3 scripts/publish.py draft --tag "$RELEASE_TAG" --repository "$GITHUB_REPOSITORY"
+          if [[ "$RELEASE_TAG" == nightly-* ]]; then
+            python3 scripts/publish.py nightly --tag "$RELEASE_TAG" --repository "$GITHUB_REPOSITORY"
+          else
+            python3 scripts/publish.py draft --tag "$RELEASE_TAG" --repository "$GITHUB_REPOSITORY"
+          fi
       # Publishing is an owner action: publish.py publish verifies the repository
       # immutability setting, which requires Administration:read. The build and
       # draft jobs deliberately have no administration credential.

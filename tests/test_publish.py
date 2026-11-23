@@ -13,6 +13,16 @@ spec = importlib.util.spec_from_file_location('publish', ROOT / 'scripts/publish
 publish = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(publish)
 
+
+class NightlyRetentionTest(unittest.TestCase):
+    def test_keeps_seven_published_nightlies_and_all_other_releases(self):
+        releases = [{'tag_name': f'nightly-2026-11-{day:02}', 'draft': False, 'prerelease': True}
+                    for day in range(1, 10)]
+        releases.extend([{'tag_name': 'setup-v0.2.0', 'draft': False, 'prerelease': False},
+                         {'tag_name': 'nightly-2026-11-30', 'draft': True, 'prerelease': True}])
+        self.assertEqual([r['tag_name'] for r in publish.old_nightlies(releases)],
+                         ['nightly-2026-11-02', 'nightly-2026-11-01'])
+
 FAKE_GH_AXI = '''#!/usr/bin/env python3
 import base64, json, os, sys
 path = sys.argv[2]

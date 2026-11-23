@@ -70,9 +70,15 @@ def verify_assets(release, expected):
             raise ValueError(f'GitHub asset digest mismatch: {asset["name"]}')
 
 
+def old_nightlies(releases):
+    published = [item for item in releases if item['prerelease'] and not item['draft']
+                 and re.fullmatch(r'nightly-\d{4}-\d{2}-\d{2}', item['tag_name'])]
+    return sorted(published, key=lambda item: item['tag_name'], reverse=True)[7:]
+
+
 def validate_tag(tag):
-    if not re.fullmatch(r'setup-v\d+\.\d+\.\d+(?:-test)?', tag):
-        raise ValueError('Use setup-vX.Y.Z or setup-vX.Y.Z-test for the release tag.')
+    if not re.fullmatch(r'(?:setup-v\d+\.\d+\.\d+(?:-test)?|nightly-\d{4}-\d{2}-\d{2})', tag):
+        raise ValueError('Use a setup version or nightly-YYYY-MM-DD for the release tag.')
 
 
 def check_new_tag(tag, root):
@@ -122,13 +128,15 @@ def start_release(tag, root):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command', choices=('draft', 'publish'))
+    parser.add_argument('command', choices=('draft', 'publish', 'nightly'))
     parser.add_argument('--tag', required=True)
     parser.add_argument('--repository', required=True)
     args = parser.parse_args()
     if not re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+', args.repository):
         parser.error('Use owner/name for the repository')
     validate_tag(args.tag)
+    if args.command == 'nightly' and not re.fullmatch(r'nightly-\d{4}-\d{2}-\d{2}', args.tag):
+        raise ValueError('Nightly publication requires a nightly tag')
     expected = verify_files(ROOT / 'dist')
     record = json.loads((ROOT / 'dist/recipe.json').read_text())
     setup = record['setup']
@@ -145,9 +153,10 @@ def main():
              'publication.json', 'SHA256SUMS'}
     if set(expected) != names:
         raise ValueError('The release does not contain the complete asset set')
-    if args.command == 'draft':
+    if args.command in ('draft', 'nightly'):
         # No --clobber and no reuse: a rerun must not replace an existing asset.
-        print(gh('release', 'create', args.tag, '--repo', args.repository, '--verify-tag', '--draft',
+        extra = ['--prerelease'] if args.command == 'nightly' else []
+        print(gh('release', 'create', args.tag, '--repo', args.repository, '--verify-tag', '--draft', *extra,
                  '--title', args.tag, '--notes',
                  f'Built from {commit}. Verify SHA256SUMS and recipe.json. Install the bilibi-setup archive through Software upload. '
                  'The installer and server tools are separate bootstrap assets. Checksums are not signatures.',
@@ -156,6 +165,23 @@ def main():
     if not release['draft']:
         raise ValueError('This release is already published; never replace its tag or assets')
     verify_assets(release, expected)
+    if args.command == 'nightly':
+        print(gh('release', 'edit', args.tag, '--repo', args.repository, '--draft=false', '--prerelease', '--latest=false'))
+        published = find_release(args.repository, args.tag)
+        if published['draft'] or not published['prerelease'] or not published.get('immutable'):
+            raise ValueError('GitHub did not report an immutable nightly prerelease')
+        verify_assets(published, expected)
+        releases = []
+        page = 1
+        while True:
+            batch = api(f'/repos/{args.repository}/releases?per_page=100&page={page}')
+            releases += batch
+            if len(batch) < 100:
+                break
+            page += 1
+        for old in old_nightlies(releases):
+            gh('release', 'delete', old['tag_name'], '--repo', args.repository)
+            gh('api', 'DELETE', f'/repos/{args.repository}/git/refs/tags/{old["tag_name"]}')
     if args.command == 'publish':
         if args.tag.endswith('-test'):
             raise ValueError('Test releases stay drafts so their tag and release can be deleted')
