@@ -3,7 +3,7 @@ targets = ["x86_64-unknown-linux-gnu"]
 
 [platform]
 url = "https://github.com/BelimbingProject/bilibi.git"
-commit = "c4c0b12ff4ee34aa1187717e37475156c1353335"
+commit = "d748bd49ca17b8ee83ff01abaf3cc14c3e86ca3a"
 
 [[domains]]
 id = "commerce"
