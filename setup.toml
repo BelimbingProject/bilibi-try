@@ -3,12 +3,12 @@ targets = ["x86_64-unknown-linux-gnu"]
 
 [platform]
 url = "https://github.com/BelimbingProject/bilibi.git"
-commit = "d0cd6bb6ad5b70aec79ff4bdfe41dd807dc1c7a9"
+commit = "c4c0b12ff4ee34aa1187717e37475156c1353335"
 
 [[domains]]
 id = "commerce"
 url = "https://github.com/BelimbingProject/bilibi-dom-commerce.git"
-commit = "f605dc0985b534b24e607b56c8455b1fa7b32da5"
+commit = "391f2d545929f2bef57318987dcb21045df8386b"
 
 [[domains]]
 id = "factory"
@@ -23,7 +23,7 @@ commit = "0e28a484bfcacd0196279a82cebbd6c1146c3d70"
 [[domains]]
 id = "people"
 url = "https://github.com/BelimbingProject/bilibi-dom-people.git"
-commit = "fa7f185745d9c91530fe53fba2dd841d948b5bcd"
+commit = "b376e2c960d0951779aa3742abaf311fc7ca088d"
 
 [[domains]]
 id = "people_connector"
@@ -33,4 +33,4 @@ commit = "a00261a3aa48160d3b130cf8748af83dba30b454"
 [[domains]]
 id = "supply_chain"
 url = "https://github.com/BelimbingProject/bilibi-dom-supply-chain.git"
-commit = "8773535b5e12baeeac7cfc0f2daaaf862b1cb487"
+commit = "bdb14fdcd049a34f08be15dc46b7407489d08bfe"
