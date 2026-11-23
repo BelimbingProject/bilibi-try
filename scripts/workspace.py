@@ -523,6 +523,8 @@ def build(command, yes=False):
 
 def release(tag):
     publish.validate_tag(tag)
+    if tag.startswith('nightly-'):
+        raise ValueError('Nightlies are prepared by the Release setup workflow, not the local release command.')
     # Refuse unrelated staged, unstaged, renamed, deleted and untracked files.
     changed = set(run('git', 'diff', '--name-only', '-z', 'HEAD', capture=True).split('\0'))
     changed.update(run('git', 'diff', '--cached', '--name-only', '-z', capture=True).split('\0'))

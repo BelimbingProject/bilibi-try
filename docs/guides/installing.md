@@ -25,6 +25,8 @@ tar -xzf bilibi-server-tools.tar.gz -C server-tools
 
 Use the packaged `server-tools/scripts/install-server.sh` and follow the [Platform server installation guide](https://github.com/BelimbingProject/bilibi/blob/main/docs/server-install.md#the-short-version). Pass `--repo BelimbingProject/bilibi-try --repo-id 1462459642 --tag "$tag"` to both the `release` and `installer` commands. The trial's packaged tools verify each artifact against the same repository number, signing workflow, tag and trusted root.
 
+The public verifier also accepts `nightly-YYYY-MM-DD` for this trial repository and repository number. Use the exact tag and the corresponding archive; a nightly is a prerelease, while the latest official release remains a `setup-v` release.
+
 ## Install a release
 
 Set the Software page's **GitHub repository** setting to your own application repository, for example `your-company/my-bilibi`. The server reads its releases from that repository.

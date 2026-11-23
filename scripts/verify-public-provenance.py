@@ -59,8 +59,10 @@ def main():
         parser.error('Use owner/name for --repo')
     if not re.fullmatch(r'[1-9][0-9]*', args.repo_id):
         parser.error('Use the independently recorded GitHub repository number for --repo-id')
-    if not re.fullmatch(r'setup-v[0-9]+\.[0-9]+\.[0-9]+', args.tag):
-        parser.error('Use setup-vX.Y.Z for --tag')
+    if not re.fullmatch(r'(?:setup-v[0-9]+\.[0-9]+\.[0-9]+|nightly-[0-9]{4}-[0-9]{2}-[0-9]{2})', args.tag):
+        parser.error('Use setup-vX.Y.Z or nightly-YYYY-MM-DD for --tag')
+    if args.tag.startswith('nightly-') and (args.repo, args.repo_id) != ('BelimbingProject/bilibi-try', '1462459642'):
+        parser.error('Nightlies must come from the trial repository')
     if not args.trusted_root.is_file():
         parser.error('Copy the Sigstore trusted root from a trusted workstation and supply --trusted-root')
 
