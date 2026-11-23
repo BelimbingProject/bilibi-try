@@ -1,12 +1,12 @@
 # Written by scripts/discover-modules.py --pin; read by --restore and apps/web/build.rs.
-platform = "d0cd6bb6ad5b70aec79ff4bdfe41dd807dc1c7a9"
+platform = "d748bd49ca17b8ee83ff01abaf3cc14c3e86ca3a"
 platform_version = "0.2.1"
-cargo_lock_sha256 = "2b11dbad7b54f6959b4fcf9f7ed1d092cbafbbcb2266def2a67cfd0155907509"
+cargo_lock_sha256 = "2d33c354de14cb522d88a940fdf0c7f308f29141ada0340e4a33d166b65641c6"
 
 [containers]
 
 [containers."domains/commerce"]
-head = "f605dc0985b534b24e607b56c8455b1fa7b32da5"
+head = "391f2d545929f2bef57318987dcb21045df8386b"
 
 [containers."domains/factory"]
 head = "49b3bc58dab5380de39932509c4feaa2685455af"
@@ -15,10 +15,10 @@ head = "49b3bc58dab5380de39932509c4feaa2685455af"
 head = "0e28a484bfcacd0196279a82cebbd6c1146c3d70"
 
 [containers."domains/people"]
-head = "fa7f185745d9c91530fe53fba2dd841d948b5bcd"
+head = "b376e2c960d0951779aa3742abaf311fc7ca088d"
 
 [containers."domains/people_connector"]
 head = "a00261a3aa48160d3b130cf8748af83dba30b454"
 
 [containers."domains/supply_chain"]
-head = "8773535b5e12baeeac7cfc0f2daaaf862b1cb487"
+head = "bdb14fdcd049a34f08be15dc46b7407489d08bfe"
