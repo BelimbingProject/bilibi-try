@@ -21,6 +21,19 @@ def json_bytes(value):
     return (json.dumps(value, sort_keys=True, indent=2) + '\n').encode()
 
 
+def public_server_installer(installer_script):
+    """Apply exactly one reviewed adaptation; an unknown Platform fails closed."""
+    patches = sorted((recipe.ROOT / 'scripts/server-tools').glob('public-provenance*.patch'))
+    matching = [patch for patch in patches if subprocess.run(
+        ['patch', '--dry-run', '--quiet', '--batch', '--forward', '--fuzz=0', str(installer_script), str(patch)],
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False).returncode == 0]
+    if len(matching) != 1:
+        raise ValueError('The Platform installer must match exactly one reviewed public-provenance patch')
+    return subprocess.run(['patch', '--quiet', '--batch', '--forward', '--fuzz=0',
+                           '--output=-', str(installer_script), str(matching[0])],
+                          check=True, stdout=subprocess.PIPE).stdout
+
+
 def archive(path, files, epoch):
     with path.open('wb') as sink, gzip.GzipFile(fileobj=sink, mode='wb', filename='', mtime=0, compresslevel=9) as zipped:
         with tarfile.open(fileobj=zipped, mode='w', format=tarfile.USTAR_FORMAT) as tar:
@@ -123,11 +136,7 @@ def main():
     # Keep the pinned server tooling and adapt its public provenance check.
     # A Platform change to that check must be reviewed before the patch applies.
     installer_script = recipe.PLATFORM / 'scripts/install-server.sh'
-    provenance_patch = recipe.ROOT / 'scripts/server-tools/public-provenance.patch'
-    patched = subprocess.run(['patch', '--quiet', '--batch', '--forward', '--fuzz=0',
-                              '--output=-', str(installer_script), str(provenance_patch)],
-                             check=True, stdout=subprocess.PIPE).stdout
-    tool_files['scripts/install-server.sh'] = (patched, 0o755)
+    tool_files['scripts/install-server.sh'] = (public_server_installer(installer_script), 0o755)
     verifier = recipe.ROOT / 'scripts/verify-public-provenance.py'
     tool_files['scripts/verify-public-provenance.py'] = (verifier.read_bytes(), 0o644)
     company_setup = recipe.ROOT / 'scripts/server-tools/setup-trial-companies.sh'

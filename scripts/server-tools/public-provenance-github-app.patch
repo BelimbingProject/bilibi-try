@@ -1,0 +1,46 @@
+--- a/scripts/install-server.sh
++++ b/scripts/install-server.sh
+@@ -598,36 +598,15 @@
+     install -m 0700 -o root -g root "$1" "$staged" || fail "cannot copy $1 for verification; nothing was installed"
+ }
+ 
+-# verify_provenance <artifact> <repository> <repository id> <tag>: GitHub
+-# verifies the file's digest, signing repository, release workflow and tag, and
+-# the signing repository's number must equal the expected one. Public
+-# repositories do not need a login. A private one is read with the server's
+-# GitHub App (a fresh read-only token for this one command, lib/github-app.py),
+-# or with a read token the operator passes as GH_TOKEN; either is inherited
+-# only by gh and never printed.
++# The trial uses public attestation bundles and a trusted root provisioned
++# independently of the release. No GitHub account is needed on this server.
+ verify_provenance() {
+-    local artifact=$1 repository=$2 repository_id=$3 tag=$4 ids id found=0
+-    command -v gh >/dev/null || fail 'GitHub CLI is not installed, so release provenance cannot be checked' 'rerun create to install the server packages, then retry'
+-    valid_repository "$repository" || fail 'the release repository must be owner/name'
+-    valid_setup_tag "$tag" || fail 'the release tag must be setup-vX.Y.Z'
++    local artifact=$1 repository=$2 repository_id=$3 tag=$4
+     repository_id=$(expected_repository_id "$repository" "$repository_id")
+-    local check=(gh attestation verify "$artifact" --repo "$repository"
+-        --signer-workflow "$repository/.github/workflows/release.yml"
+-        --source-ref "refs/tags/$tag"
+-        --format json --jq '.[].verificationResult.signature.certificate.sourceRepositoryIdentifier')
+-    if [[ -z ${GH_TOKEN:-} && -f $github_app ]]; then
+-        ids=$(python3 "$here/lib/github-app.py" run "$github_app" --repo "$repository" --log "$log" -- "${check[@]}") ||
+-            fail "GitHub build provenance did not verify for $repository tag $tag with the server's GitHub App; nothing was installed" "check the App with: $0 github-app --check, then download the asset from the official Release setup workflow and retry"
+-    else
+-        ids=$("${check[@]}" 2>>"$log") ||
+-            fail "GitHub build provenance did not verify for $repository tag $tag; nothing was installed" 'download the asset from the official Release setup workflow and retry'
+-    fi
+-    while IFS= read -r id; do
+-        [[ -n $id ]] || continue
+-        found=1
+-        [[ $id == "$repository_id" ]] || fail "the release was signed by a different GitHub repository number than $repository_id; nothing was installed" 'use the asset from the repository you intend, or check the --repo-id you gave'
+-    done <<<"$ids"
+-    ((found)) || fail "GitHub returned no verified provenance for $repository tag $tag; nothing was installed" 'download the asset from the official Release setup workflow and retry'
++    python3 "$here/verify-public-provenance.py" "$artifact" \
++        --repo "$repository" --repo-id "$repository_id" --tag "$tag" \
++        --trusted-root /etc/bilibi/attestation-trusted-root.jsonl 2>>"$log" ||
++        fail "GitHub build provenance did not verify for $repository tag $tag; nothing was installed" "verify the trusted root and release asset, then see $log"
+ }
+ 
+ # unpack_release <archive> <folder>: accept only the release archive's plain
