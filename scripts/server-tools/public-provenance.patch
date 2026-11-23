@@ -1,25 +1,33 @@
 --- a/scripts/install-server.sh
 +++ b/scripts/install-server.sh
-@@ -623,5 +623,2 @@
+@@ -649,7 +649,2 @@
 -# verify_provenance <artifact> <repository> <repository id> <tag>: GitHub
 -# verifies the file's digest, signing repository, release workflow and tag, and
 -# the signing repository's number must equal the expected one. Public
--# repositories do not need a login. For a private repository, pass its read
--# token as GH_TOKEN; it is inherited only by this command and is never printed.
+-# repositories do not need a login. A private one is read with the server's
+-# GitHub App (a fresh read-only token for this one command, lib/github-app.py),
+-# or with a read token the operator passes as GH_TOKEN; either is inherited
+-# only by gh and never printed.
 +# The trial uses public attestation bundles and a trusted root provisioned
 +# independently of the release. No GitHub account is needed on this server.
-@@ -629,4 +626 @@
+@@ -657,4 +652 @@
 -    local artifact=$1 repository=$2 repository_id=$3 tag=$4 ids id found=0
 -    command -v gh >/dev/null || fail 'GitHub CLI is not installed, so release provenance cannot be checked' 'rerun create to install the server packages, then retry'
 -    valid_repository "$repository" || fail 'the release repository must be owner/name' '' INVALID_INPUT
 -    valid_setup_tag "$tag" || fail 'the release tag must be setup-vX.Y.Z' '' INVALID_INPUT
 +    local artifact=$1 repository=$2 repository_id=$3 tag=$4
-@@ -634,11 +628,4 @@
--    ids=$(gh attestation verify "$artifact" --repo "$repository" \
--        --signer-workflow "$repository/.github/workflows/release.yml" \
--        --source-ref "refs/tags/$tag" \
--        --format json --jq '.[].verificationResult.signature.certificate.sourceRepositoryIdentifier' 2>>"$log") ||
--        fail "GitHub build provenance did not verify for $repository tag $tag; nothing was installed" 'download the asset from the official Release setup workflow and retry' SIGNATURE_INVALID
+@@ -662,17 +654,4 @@
+-    local check=(gh attestation verify "$artifact" --repo "$repository"
+-        --signer-workflow "$repository/.github/workflows/release.yml"
+-        --source-ref "refs/tags/$tag"
+-        --format json --jq '.[].verificationResult.signature.certificate.sourceRepositoryIdentifier')
+-    if [[ -z ${GH_TOKEN:-} && -f $github_app ]]; then
+-        ids=$(python3 "$here/lib/github-app.py" run "$github_app" --repo "$repository" --log "$log" -- "${check[@]}") ||
+-            fail "GitHub build provenance did not verify for $repository tag $tag with the server's GitHub App; nothing was installed" "check the App with: $0 github-app --check, then download the asset from the official Release setup workflow and retry" SIGNATURE_INVALID
+-    else
+-        ids=$("${check[@]}" 2>>"$log") ||
+-            fail "GitHub build provenance did not verify for $repository tag $tag; nothing was installed" 'download the asset from the official Release setup workflow and retry' SIGNATURE_INVALID
+-    fi
 -    while IFS= read -r id; do
 -        [[ -n $id ]] || continue
 -        found=1
