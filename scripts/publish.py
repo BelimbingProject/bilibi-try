@@ -19,9 +19,13 @@ def api(path):
     # gh-axi renders TOON. Asking jq for base64 keeps the JSON body on one line
     # without making callers parse arbitrary TOON tables or escaped strings.
     result = gh('api', path, '--jq', '@base64', '--full')
-    for line in result.splitlines():
+    lines = result.splitlines()
+    for line in lines:
         if line.startswith('  body: '):
             return json.loads(base64.b64decode(line[8:].strip('"')))
+    # Newer gh-axi prints a --jq result as it is, without the TOON wrapper.
+    if len(lines) == 1 and lines[0] and ' ' not in lines[0]:
+        return json.loads(base64.b64decode(lines[0]))
     raise ValueError(f'No JSON response from gh-axi: {result}')
 
 
