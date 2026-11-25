@@ -23,9 +23,11 @@ mkdir server-tools
 tar -xzf bilibi-server-tools.tar.gz -C server-tools
 ```
 
-Use the packaged `server-tools/scripts/install-server.sh` and follow the [Platform server installation guide](https://github.com/BelimbingProject/bilibi/blob/main/docs/server-install.md#the-short-version). Pass `--repo BelimbingProject/bilibi-try --repo-id 1462459642 --tag "$tag"` to both the `release` and `installer` commands. The trial's packaged tools verify each artifact against the same repository number, signing workflow, tag and trusted root.
+Use the packaged `server-tools/scripts/install-server.sh` and follow the [Platform server installation guide](https://github.com/BelimbingProject/bilibi/blob/main/docs/server-install.md#the-short-version). Pin the trial's release trust once with `trust production --github --repo BelimbingProject/bilibi-try --repo-id 1462459642 --minimum-tag "$tag"`, then pass `--tag "$tag"` to the `release` and `installer` commands. The trial's packaged tools verify each artifact against the same repository number, signing workflow, tag and trusted root.
 
-The public verifier also accepts `nightly-YYYY-MM-DD` for this trial repository and repository number. Use the exact tag and the corresponding archive; a nightly is a prerelease, while the latest official release remains a `setup-v` release.
+`trust` accepts only `setup-vX.Y.Z` tags, so the minimum tag is the newest official release, not a nightly. The trial server's nightly updater (`scripts/trial/bilibi-try-nightly.sh`, installed as `/usr/local/sbin/bilibi-try-nightly`) checks that the pinned trust accepts the nightly it is about to install, and stops before changing anything when it does not.
+
+The public verifier also accepts `nightly-YYYY-MM-DD` for this trial repository and repository number. Use the exact tag and the corresponding archive; a nightly is a prerelease, while the latest official release remains a `setup-v` release. The Platform's release trust compares tags as `setup-vX.Y.Z`, so it does not yet accept a nightly tag: the updater installs a nightly only when the pinned trust accepts it, and otherwise reports why and leaves the running release in service.
 
 ## Install a release
 
