@@ -1,0 +1,34 @@
+--- a/scripts/install-server.sh
++++ b/scripts/install-server.sh
+@@ -872,8 +872,8 @@
+ }
+ 
+ # verify_provenance <instance> <artifact> <tag> <kind> <target> [proof]: apply the one proof policy
+-# pinned at setup. Operator signatures are checked entirely offline. GitHub
+-# attestations keep the existing public-build path and may use the server App.
++# pinned at setup. Operator signatures are checked entirely offline. The trial
++# verifies GitHub attestations with its independently provisioned trusted root.
+ verify_provenance() {
+     local instance=$1 artifact=$2 tag=$3 artifact_kind=$4 target=$5 proof=${6:-}
+     local values trust_kind repository repository_id workflow release_trust
+@@ -897,15 +897,11 @@
+     fi
+     [[ -z $proof ]] || fail 'this server trusts GitHub attestations, not an operator proof' 'remove --proof or have the installation owner replace the release trust policy with fresh 2FA' PROOF_METHOD_WRONG
+     command -v gh >/dev/null || fail 'GitHub CLI is not installed, so release provenance cannot be checked' 'rerun create to install the server packages, then retry'
++    [[ $workflow == "$repository/.github/workflows/release.yml" ]] || fail 'the trial release trust names an unsupported workflow' 'replace it with this repository release workflow' TRUST_INVALID
+-    local check=(python3 "$release_proof" verify-github --artifact "$artifact" --repository "$repository"
+-        --repository-id "$repository_id" --workflow "$workflow" --tag "$tag")
+-    if [[ -f $github_app ]]; then
+-        python3 "$here/lib/github-app.py" run "$github_app" --repo "$repository" -- "${check[@]}" --app ||
+-            fail "GitHub build provenance did not verify for $repository tag $tag with the server's GitHub App; nothing was installed" "check the App with: $0 github-app --check, then retry" SIGNATURE_INVALID
+-    else
+-        "${check[@]}" ||
+-            fail "GitHub build provenance did not verify for public repository $repository tag $tag; nothing was installed" "for a private repository set up the server GitHub App, then retry" SIGNATURE_INVALID
+-    fi
++    python3 "$here/verify-public-provenance.py" "$artifact" \
++        --repo "$repository" --repo-id "$repository_id" --tag "$tag" \
++        --trusted-root /etc/bilibi/attestation-trusted-root.jsonl 2>>"$log" ||
++        fail "GitHub build provenance did not verify for $repository tag $tag; nothing was installed" "verify the trusted root and release asset, then see $log" SIGNATURE_INVALID
+ }
+ 
+ # unpack_release <archive> <folder>: accept only the release archive's plain
