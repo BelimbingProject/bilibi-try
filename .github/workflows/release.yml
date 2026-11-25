@@ -79,6 +79,7 @@ jobs:
     uses: ./.github/workflows/check.yml
     with:
       release_tag: ${{ github.ref_name }}
+      release_build: true
     secrets:
       SOURCE_READ_TOKEN: ${{ secrets.SOURCE_READ_TOKEN }}
       SOURCE_APP_PRIVATE_KEY: ${{ secrets.SOURCE_APP_PRIVATE_KEY }}
