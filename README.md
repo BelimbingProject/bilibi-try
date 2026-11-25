@@ -17,7 +17,7 @@ Sign in at the HTTPS address printed by the launcher. The first start builds the
 
 Merge the checked setup record to `main`. An organization owner can then cut a `setup-vX.Y.Z` tag using the [release guide](docs/guides/releasing.md#release-your-setup). GitHub Actions builds the pinned application, publishes SHA-256 checksums and GitHub build provenance, and stages the assets in a draft. The organization owner verifies and publishes the immutable release.
 
-At 07:00 Kuala Lumpur time, the release workflow records the current `main` commits of the Platform and the Domains in `setup.toml`, then builds an immutable `nightly-YYYY-MM-DD` prerelease with the same asset provenance. It keeps seven published nightlies. The prerelease does not change the latest official release. Run the workflow manually on the default branch to prepare a nightly; if a tagged build needs retrying, dispatch the workflow on that tag. A date can be published only once.
+The nightly is started daily at 06:00 Kuala Lumpur time by a dispatch from the operator's machine. The release workflow records the current `main` commits of the Platform and the Domains in `setup.toml`, then builds an immutable `nightly-YYYY-MM-DD` prerelease with the same asset provenance. It keeps seven published nightlies. The prerelease does not change the latest official release. Run the workflow manually on the default branch to prepare a nightly; if a tagged build needs retrying, dispatch the workflow on that tag. A date can be published only once.
 
 Follow the [public server setup steps](docs/guides/installing.md#first-install-on-a-public-trial-server) to verify the published tools and install the released binaries. Tenant and account data are entered on the installed server.
 
