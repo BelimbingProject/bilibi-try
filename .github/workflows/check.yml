@@ -69,6 +69,7 @@ jobs:
             build/cargo/git
             build/target
           key: linux-x86_64-${{ hashFiles('setup.toml', 'composition/*', 'rust-toolchain.toml', 'builder.toml', 'scripts/Builder.Dockerfile') }}
+          restore-keys: linux-x86_64-
       # Call the saved-record scripts directly; CI never chooses or saves versions.
       - name: Restore and check the whole setup
         run: |
