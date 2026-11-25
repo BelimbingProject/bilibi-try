@@ -14,6 +14,28 @@ spec.loader.exec_module(package)
 
 
 class ServerInstallerTest(unittest.TestCase):
+    def test_reviewed_patches_are_valid_and_unambiguous(self):
+        patches = sorted((ROOT / 'scripts/server-tools').glob('public-provenance*.patch'))
+        for reviewed in patches:
+            preimage = []
+            in_hunk = False
+            hunks = 0
+            for line in reviewed.read_text().splitlines(True):
+                if line.startswith('@@ '):
+                    if hunks:
+                        preimage.extend(f'unrelated gap {hunks}-{n}\n' for n in range(30))
+                    hunks += 1
+                    in_hunk = True
+                elif in_hunk and line.startswith((' ', '-')):
+                    preimage.append(line[1:])
+            self.assertGreater(hunks, 0, reviewed.name)
+            with tempfile.TemporaryDirectory() as temp:
+                installer = Path(temp) / 'install-server.sh'
+                installer.write_text(''.join(preimage))
+                original = installer.read_bytes()
+                package.public_server_installer(installer)
+                self.assertEqual(installer.read_bytes(), original)
+
     def test_only_reviewed_installer_variants_are_adapted(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
