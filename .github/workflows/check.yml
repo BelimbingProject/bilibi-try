@@ -21,7 +21,9 @@ permissions:
 jobs:
   check:
     runs-on: ${{ inputs.release_build && fromJSON('["self-hosted", "try-release"]') || 'ubuntu-24.04' }}
-    timeout-minutes: 90
+    # The shared Omar runner serves many concurrent builds, so warm-up builds
+    # there run long; the GitHub-hosted pull request path keeps the shorter cap.
+    timeout-minutes: ${{ inputs.release_build && 240 || 90 }}
     services:
       postgres:
         image: postgres:18.0-bookworm@sha256:3f55f8895c4ed50603e2fbdfc72fffeeaba3173321fee5cb825bbbeb30d9d854
