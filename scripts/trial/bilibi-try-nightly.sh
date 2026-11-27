@@ -107,7 +107,8 @@ restore_backup() {
         { log 'Invalid rollback record; services need administrator attention'; return 1; }
     actual=$(sha256sum "$archive" | cut -d' ' -f1)
     [[ $actual == "$expected" ]] || { log 'Backup checksum failed; services need administrator attention'; return 1; }
-    systemctl stop "bilibi-installer@$instance" "bilibi@$instance" || return 1
+    systemctl stop "bilibi-installer@$instance" || true
+    systemctl stop "bilibi@$instance" || return 1
     clear_public_schema || { log 'Clearing the database for restore failed'; return 1; }
     runuser -u postgres -- pg_restore -p "$pgport" --role="$database" --no-owner --no-privileges \
         --exit-on-error --dbname "$database" "$archive" >/dev/null 2>&1 ||
@@ -158,7 +159,7 @@ in_service_tools() {
 # An update cut off half way is rolled back before anything else.
 if [[ -f $state/transaction ]]; then
     log 'Found an interrupted nightly update; restoring its backup'
-    rollback || { systemctl stop "bilibi-installer@$instance" "bilibi@$instance" || true; die 'Rollback failed; services need administrator attention'; }
+    rollback || { systemctl stop "bilibi-installer@$instance" || true; systemctl stop "bilibi@$instance" || true; die 'Rollback failed; services need administrator attention'; }
     exit 1
 fi
 
@@ -264,10 +265,11 @@ on_exit() {
     if (( committed == 0 )); then
         if [[ -f $state/transaction ]]; then
             log "Nightly $tag failed; restoring previous release and database"
-            rollback || { systemctl stop "bilibi-installer@$instance" "bilibi@$instance" || true; log 'Rollback failed; services need administrator attention'; }
+            rollback || { systemctl stop "bilibi-installer@$instance" || true; systemctl stop "bilibi@$instance" || true; log 'Rollback failed; services need administrator attention'; }
         else
             log "Nightly $tag stopped before installation; restarting services"
-            systemctl start "bilibi@$instance" "bilibi-installer@$instance" || log 'Could not restart instance services'
+            systemctl start "bilibi@$instance" || log 'Could not restart instance service'
+            systemctl start "bilibi-installer@$instance" || true
         fi
         exit 1
     fi
@@ -281,12 +283,13 @@ if has_trust_interface; then
     ensure_trust || exit 1
 fi
 software_idle || die 'A software job is active or cannot be checked; update deferred'
-systemctl is-active --quiet "bilibi@$instance" && systemctl is-active --quiet "bilibi-installer@$instance" ||
-    die 'Instance services are not both active'
+systemctl is-active --quiet "bilibi@$instance" ||
+    die 'The instance service is not active'
 
 # ---------------------------------------------------------------- backup
 # Stop both writers before the backup. Never start an update without it.
-systemctl stop "bilibi-installer@$instance" "bilibi@$instance" || die 'Could not stop instance services'
+systemctl stop "bilibi-installer@$instance" || true
+systemctl stop "bilibi@$instance" || die 'Could not stop instance service'
 software_idle || die 'A software job started before the pause; update deferred'
 backup=$(mktemp -d "$backups/nightly-$(date -u +%Y%m%dT%H%M%SZ)-XXXXXX")
 chown postgres:postgres "$backup"
@@ -308,7 +311,7 @@ else
         >"$state/last-release.log" 2>&1 ||
         { log "Installation failed for $tag; see $state/last-release.log"; exit 1; }
 fi
-systemctl start "bilibi-installer@$instance" || die 'Installer service failed to start'
+systemctl start "bilibi-installer@$instance" || true
 # The public check exercises the same HTTPS route visitors use.
 answers "$(app_origin)" || die 'Public login health check failed'
 rm -f "$state/transaction"
