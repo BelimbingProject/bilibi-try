@@ -1,24 +1,30 @@
 # Written by scripts/discover-modules.py --pin; read by --restore and apps/web/build.rs.
-platform = "d748bd49ca17b8ee83ff01abaf3cc14c3e86ca3a"
+platform = "f13d99352f9f2c54e806dec84ee5ee32d0f1373e"
 platform_version = "0.2.1"
-cargo_lock_sha256 = "2d33c354de14cb522d88a940fdf0c7f308f29141ada0340e4a33d166b65641c6"
+cargo_lock_sha256 = "a4112ce5addfa76f9f2aceabdf88a42808d6f1beccef901a8834fbe20d8cfa41"
 
 [containers]
 
 [containers."domains/commerce"]
-head = "391f2d545929f2bef57318987dcb21045df8386b"
+head = "bf278c0509961e51e0499be8e966837950551580"
+committed_at = "2026-11-25T11:47:14+08:00"
 
 [containers."domains/factory"]
-head = "49b3bc58dab5380de39932509c4feaa2685455af"
+head = "fc5dba4a449a45d83b4164daa6924224bab1bbb1"
+committed_at = "2026-11-26T22:43:52+08:00"
 
 [containers."domains/finance"]
-head = "0e28a484bfcacd0196279a82cebbd6c1146c3d70"
+head = "dfd509d091f3c8dd2c5743a66a7128b65eb12492"
+committed_at = "2026-11-25T18:51:58+08:00"
 
 [containers."domains/people"]
 head = "b376e2c960d0951779aa3742abaf311fc7ca088d"
+committed_at = "2026-11-23T09:44:23+08:00"
 
 [containers."domains/people_connector"]
-head = "a00261a3aa48160d3b130cf8748af83dba30b454"
+head = "79327c55f97a569be01573eceb75275ff9b3fa08"
+committed_at = "2026-11-24T03:51:04+08:00"
 
 [containers."domains/supply_chain"]
 head = "bdb14fdcd049a34f08be15dc46b7407489d08bfe"
+committed_at = "2026-11-23T09:44:28+08:00"

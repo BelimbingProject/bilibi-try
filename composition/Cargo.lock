@@ -330,7 +330,9 @@ dependencies = [
  "bilibi-notifications",
  "bilibi-party-ids",
  "bilibi-person",
+ "bilibi-picklists",
  "bilibi-principal-directory",
+ "bilibi-public",
  "bilibi-queue",
  "bilibi-records",
  "bilibi-schedule",
@@ -537,6 +539,7 @@ dependencies = [
  "bilibi-audit",
  "bilibi-authz",
  "bilibi-base",
+ "bilibi-branding",
  "bilibi-core",
  "bilibi-database",
  "bilibi-module-registry",
@@ -544,6 +547,7 @@ dependencies = [
  "bilibi-personal-data",
  "bilibi-queue",
  "bilibi-settings",
+ "bilibi-templates",
  "bilibi-tenancy",
  "bilibi-walkthrough-fixture",
  "bilibi-web",
@@ -551,6 +555,7 @@ dependencies = [
  "hmac 0.13.0",
  "inventory",
  "libc",
+ "serde",
  "serde_json",
  "sha2 0.11.1",
  "thiserror",
@@ -684,6 +689,7 @@ dependencies = [
  "bilibi-audit-views",
  "bilibi-authz",
  "bilibi-authz-agent",
+ "bilibi-branding",
  "bilibi-bulk-data",
  "bilibi-custom-fields",
  "bilibi-dashboard",
@@ -710,6 +716,7 @@ dependencies = [
  "bilibi-ports",
  "bilibi-principal-directory",
  "bilibi-privacy",
+ "bilibi-public",
  "bilibi-queue",
  "bilibi-records",
  "bilibi-reports",
@@ -731,6 +738,27 @@ dependencies = [
  "bilibi-visitor",
  "bilibi-watchers",
  "bilibi-workflow",
+]
+
+[[package]]
+name = "bilibi-branding"
+version = "0.2.1"
+dependencies = [
+ "bilibi-agent-api",
+ "bilibi-authz",
+ "bilibi-database",
+ "bilibi-labels",
+ "bilibi-mail",
+ "bilibi-media",
+ "bilibi-module-registry",
+ "bilibi-settings",
+ "bilibi-settings-editor",
+ "bilibi-tenancy",
+ "bilibi-ui",
+ "inventory",
+ "serde_json",
+ "tokio",
+ "tokio-postgres",
 ]
 
 [[package]]
@@ -767,6 +795,7 @@ dependencies = [
  "jiff",
  "serde",
  "serde_json",
+ "sha2 0.11.1",
  "tokio",
  "tokio-postgres",
 ]
@@ -780,6 +809,7 @@ dependencies = [
  "bilibi-agent-api",
  "bilibi-artifacts",
  "bilibi-authz",
+ "bilibi-branding",
  "bilibi-company",
  "bilibi-currency",
  "bilibi-database",
@@ -792,6 +822,8 @@ dependencies = [
  "bilibi-party-ids",
  "bilibi-product",
  "bilibi-records",
+ "bilibi-settings",
+ "bilibi-templates",
  "bilibi-tenancy",
  "bilibi-ui",
  "bilibi-watchers",
@@ -824,7 +856,6 @@ dependencies = [
  "bilibi-media",
  "bilibi-menu",
  "bilibi-module-registry",
- "bilibi-notifications",
  "bilibi-party",
  "bilibi-party-ids",
  "bilibi-person",
@@ -842,6 +873,7 @@ dependencies = [
  "bilibi-tenancy",
  "bilibi-ui",
  "bilibi-walkthrough-fixture",
+ "bilibi-watchers",
  "bilibi-web",
  "bilibi-workflow",
  "hmac 0.13.0",
@@ -1143,7 +1175,9 @@ version = "0.2.1"
 dependencies = [
  "askama",
  "bilibi-agent-api",
+ "bilibi-artifacts",
  "bilibi-authz",
+ "bilibi-branding",
  "bilibi-company",
  "bilibi-database",
  "bilibi-datetime",
@@ -1152,6 +1186,9 @@ dependencies = [
  "bilibi-locale",
  "bilibi-menu",
  "bilibi-module-registry",
+ "bilibi-party-ids",
+ "bilibi-settings",
+ "bilibi-templates",
  "bilibi-tenancy",
  "bilibi-ui",
  "bilibi-user",
@@ -1200,6 +1237,7 @@ dependencies = [
  "bilibi-artifacts",
  "bilibi-audit",
  "bilibi-authz",
+ "bilibi-branding",
  "bilibi-company",
  "bilibi-database",
  "bilibi-datetime",
@@ -1212,6 +1250,7 @@ dependencies = [
  "bilibi-principal-directory",
  "bilibi-queue",
  "bilibi-settings",
+ "bilibi-templates",
  "bilibi-tenancy",
  "bilibi-ui",
  "http",
@@ -1353,12 +1392,13 @@ name = "bilibi-finance-receivables"
 version = "0.2.1"
 dependencies = [
  "askama",
- "base64 0.23.1",
  "bilibi-address",
  "bilibi-agent-api",
  "bilibi-artifacts",
  "bilibi-authz",
+ "bilibi-branding",
  "bilibi-company",
+ "bilibi-currency",
  "bilibi-database",
  "bilibi-datetime",
  "bilibi-events",
@@ -1377,6 +1417,7 @@ dependencies = [
  "bilibi-schedule",
  "bilibi-settings",
  "bilibi-settings-editor",
+ "bilibi-templates",
  "bilibi-tenancy",
  "bilibi-ui",
  "inventory",
@@ -1464,6 +1505,7 @@ name = "bilibi-finance-sst"
 version = "0.2.1"
 dependencies = [
  "askama",
+ "bilibi-agent-api",
  "bilibi-authz",
  "bilibi-company",
  "bilibi-database",
@@ -1519,6 +1561,7 @@ dependencies = [
  "bilibi-party-ids",
  "bilibi-queue",
  "bilibi-settings",
+ "bilibi-templates",
  "bilibi-tenancy",
  "bilibi-ui",
  "bilibi-user",
@@ -1593,6 +1636,7 @@ dependencies = [
 name = "bilibi-installer"
 version = "0.2.1"
 dependencies = [
+ "regex-lite",
  "serde_json",
  "tokio",
  "tokio-postgres",
@@ -1708,11 +1752,13 @@ name = "bilibi-mail"
 version = "0.2.1"
 dependencies = [
  "ammonia",
+ "askama",
  "bilibi-base",
  "bilibi-core",
  "bilibi-database",
  "bilibi-module-registry",
  "bilibi-settings",
+ "bilibi-ui",
  "bilibi-walkthrough-fixture",
  "bilibi-web",
  "data-encoding",
@@ -1724,6 +1770,7 @@ dependencies = [
  "serde_json",
  "thiserror",
  "tokio",
+ "url",
  "uuid",
 ]
 
@@ -2435,6 +2482,7 @@ dependencies = [
  "bilibi-person",
  "bilibi-personal-data",
  "bilibi-privacy",
+ "bilibi-public",
  "bilibi-records",
  "bilibi-settings",
  "bilibi-templates",
@@ -2548,6 +2596,29 @@ dependencies = [
  "serde_json",
  "tokio",
  "tokio-postgres",
+]
+
+[[package]]
+name = "bilibi-public"
+version = "0.2.1"
+dependencies = [
+ "askama",
+ "bilibi-agent-api",
+ "bilibi-authz",
+ "bilibi-database",
+ "bilibi-media",
+ "bilibi-menu",
+ "bilibi-module-registry",
+ "bilibi-settings",
+ "bilibi-tenancy",
+ "bilibi-ui",
+ "getrandom 0.4.3",
+ "hmac 0.13.0",
+ "inventory",
+ "serde_json",
+ "sha2 0.11.1",
+ "tokio-postgres",
+ "url",
 ]
 
 [[package]]
@@ -2825,6 +2896,7 @@ dependencies = [
  "bilibi-menu",
  "bilibi-module-registry",
  "bilibi-notifications",
+ "bilibi-schedule",
  "bilibi-settings",
  "bilibi-step-up",
  "bilibi-system",
@@ -3005,20 +3077,31 @@ dependencies = [
 name = "bilibi-templates"
 version = "0.2.1"
 dependencies = [
+ "base64 0.23.1",
  "bilibi-agent-api",
+ "bilibi-artifacts",
  "bilibi-authz",
+ "bilibi-branding",
  "bilibi-database",
  "bilibi-datetime",
  "bilibi-labels",
  "bilibi-module-registry",
  "bilibi-party-ids",
+ "bilibi-queue",
+ "bilibi-schedule",
+ "bilibi-settings",
  "bilibi-tenancy",
+ "bilibi-ui",
  "icu_locale",
  "inventory",
  "jiff",
+ "qrcode",
+ "rust_decimal",
  "serde",
  "serde_json",
+ "sha2 0.11.1",
  "tokio-postgres",
+ "url",
 ]
 
 [[package]]
@@ -3203,6 +3286,7 @@ version = "0.2.1"
 dependencies = [
  "askama",
  "bilibi-agent-api",
+ "bilibi-ai",
  "bilibi-authz",
  "bilibi-custom-fields",
  "bilibi-database",
@@ -5742,6 +5826,12 @@ checksum = "ed2bf2547551a7053d6fdfafda3f938979645c44812fbfcda098faae3f1a362d"
 dependencies = [
  "bitflags 2.13.2",
 ]
+
+[[package]]
+name = "regex-lite"
+version = "0.1.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cab834c73d247e67f4fae452806d17d3c7501756d98c8808d7c9c7aa7d18f973"
 
 [[package]]
 name = "relative-path"
