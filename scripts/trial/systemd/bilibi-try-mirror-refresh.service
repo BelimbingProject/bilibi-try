@@ -1,0 +1,6 @@
+[Unit]
+Description=Refresh Bilibi Try source mirrors and warm build dependencies
+[Service]
+Type=oneshot
+TimeoutStartSec=50min
+ExecStart=%h/repo/BelimbingProject/try-local-build/scripts/trial/refresh-local-nightly.sh

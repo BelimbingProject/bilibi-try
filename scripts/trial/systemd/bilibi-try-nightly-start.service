@@ -1,0 +1,7 @@
+[Unit]
+Description=Build and sign the Bilibi trial nightly from Omar's local mirrors
+[Service]
+Type=oneshot
+TimeoutStartSec=4h
+ExecStart=%h/repo/BelimbingProject/try-local-build/scripts/trial/build-local-nightly.sh
+ExecStartPost=/usr/bin/sudo -n /usr/bin/systemctl start bilibi-try-nightly.service

@@ -3,6 +3,16 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 image="bilibi-setup-builder:$(sha256sum builder.toml scripts/Builder.Dockerfile | sha256sum | cut -c1-16)"
+network=host
+extra=()
+if [[ -n ${BILIBI_OFFLINE_NETWORK:-} ]]; then
+  network=$BILIBI_OFFLINE_NETWORK
+  [[ $(docker network inspect --format '{{.Internal}}' "$network") == true ]] ||
+    { echo 'The offline builder requires an internal Docker network' >&2; exit 1; }
+  docker image inspect "$image" >/dev/null ||
+    { echo "Cached builder image missing: $image" >&2; exit 1; }
+  extra=(-e CARGO_NET_OFFLINE=true -e npm_config_offline=true -e GIT_ALLOW_PROTOCOL=file)
+else
 readarray -t config < <(python3 - <<'PY'
 import tomllib
 with open('builder.toml', 'rb') as stream:
@@ -13,6 +23,7 @@ PY
 )
 docker build --build-arg "RUST_IMAGE=${config[0]}" --build-arg "NODE_IMAGE=${config[1]}" \
   --build-arg "DEBIAN_SNAPSHOT=${config[2]}" -f scripts/Builder.Dockerfile -t "$image" .
+fi
 readarray -t paths < <(python3 - <<'PY_PATHS'
 import os
 from pathlib import Path
@@ -26,7 +37,7 @@ sources=${paths[0]}
 outputs=${paths[1]}
 target=${paths[2]}
 mkdir -p "$sources" "$outputs/cargo/registry" "$outputs/cargo/git" "$target" "$outputs/npm-cache"
-docker run --rm --network host --user "$(id -u):$(id -g)" \
+docker run --rm --pull never --network "$network" "${extra[@]}" --user "$(id -u):$(id -g)" \
   -v "$PWD:/workspace" \
   -v "$sources:/workspace/sources" \
   -v "$outputs:/workspace/build" \

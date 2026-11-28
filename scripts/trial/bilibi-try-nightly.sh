@@ -173,18 +173,45 @@ fi
 
 # ---------------------------------------------------------------- download
 archive="$state/downloads/bilibi-$tag-x86_64-unknown-linux-gnu.tar.gz"
-base="https://github.com/$repository/releases/download/$tag"
-curl -fsSL --proto '=https' --proto-redir '=https' --connect-timeout 20 --max-time 1200 --retry 3 \
-    -o "$archive.part" "$base/bilibi-$tag-x86_64-unknown-linux-gnu.tar.gz" || die "Download failed for $tag"
-mv "$archive.part" "$archive"
 tools_archive="$state/downloads/server-tools-$tag.tar.gz"
-curl -fsSL --proto '=https' --proto-redir '=https' --connect-timeout 20 --max-time 1200 --retry 3 \
-    -o "$tools_archive.part" "$base/bilibi-server-tools.tar.gz" || die "Server tools download failed for $tag"
-mv "$tools_archive.part" "$tools_archive"
-for file in "$archive" "$tools_archive"; do
-    python3 "$verifier" "$file" --repo "$repository" --repo-id "$repository_id" --tag "$tag" \
-        --trusted-root "$trusted_root" >/dev/null 2>&1 || die "Provenance verification failed for $file"
-done
+local_mode=${BILIBI_TRIAL_LOCAL_ONLY:-0}
+release_flags=()
+if [[ $local_mode == 1 ]]; then
+    inbox="$state/inbox/$tag"
+    proof_helper=${BILIBI_TRIAL_PROOF_HELPER:-/usr/local/lib/bilibi-try-nightly/release-proof.py}
+    policy="$instance_dir/trust/release.json"
+    values=$(python3 "$proof_helper" trust-values --trust "$policy") || die 'Invalid release trust'
+    mapfile -t trust <<< "$values"
+    [[ ${trust[0]:-} == operator && ${trust[1]:-} == "$repository" &&
+       ${trust[2]:-} == "$repository_id" && ${trust[3]:-} == "$repository/.github/workflows/release.yml" ]] ||
+        die 'Local nightlies require the trial operator trust policy'
+    python3 "$proof_helper" check-tag --trust "$policy" --tag "$tag"
+    for entry in "${archive##*/}:$archive:setup:x86_64-unknown-linux-gnu" \
+                 "bilibi-server-tools.tar.gz:$tools_archive:server-tools:server-tools"; do
+        IFS=: read -r name dest kind target <<< "$entry"
+        [[ -f $inbox/$name && -f $inbox/$name.proof.json ]] || die "Local asset or proof missing for $name"
+        install -m 0600 -- "$inbox/$name" "$dest"
+        install -m 0600 -- "$inbox/$name.proof.json" "$dest.proof.json"
+        python3 "$proof_helper" verify-operator --artifact "$dest" --proof "$dest.proof.json" \
+            --trust "$policy" --tag "$tag" --kind "$kind" --target "$target" >/dev/null ||
+            die "Operator proof failed for $name"
+    done
+    release_flags=(--proof "$archive.proof.json")
+elif [[ $local_mode == 0 ]]; then
+    base="https://github.com/$repository/releases/download/$tag"
+    curl -fsSL --proto '=https' --proto-redir '=https' --connect-timeout 20 --max-time 1200 --retry 3 \
+        -o "$archive.part" "$base/bilibi-$tag-x86_64-unknown-linux-gnu.tar.gz" || die "Download failed for $tag"
+    mv "$archive.part" "$archive"
+    curl -fsSL --proto '=https' --proto-redir '=https' --connect-timeout 20 --max-time 1200 --retry 3 \
+        -o "$tools_archive.part" "$base/bilibi-server-tools.tar.gz" || die "Server tools download failed for $tag"
+    mv "$tools_archive.part" "$tools_archive"
+    for file in "$archive" "$tools_archive"; do
+        python3 "$verifier" "$file" --repo "$repository" --repo-id "$repository_id" --tag "$tag" \
+            --trusted-root "$trusted_root" >/dev/null 2>&1 || die "Provenance verification failed for $file"
+    done
+else
+    die 'BILIBI_TRIAL_LOCAL_ONLY must be 0 or 1'
+fi
 tools=$(mktemp -d "$state/tools/$tag-XXXXXX")
 python3 - "$tools_archive" "$tools" <<'PYTOOLS'
 import sys, tarfile
@@ -278,7 +305,9 @@ on_exit() {
 trap on_exit EXIT
 trap 'exit 1' HUP INT TERM
 
-if has_trust_interface; then
+if [[ $local_mode == 1 ]]; then
+    has_trust_interface || die 'This archive cannot install operator-signed releases'
+elif has_trust_interface; then
     nightly_accepted || die "The Platform release trust does not accept $tag yet; nothing was changed"
     ensure_trust || exit 1
 fi
@@ -304,7 +333,7 @@ mv -f "$state/transaction.new" "$state/transaction"
 
 # ---------------------------------------------------------------- install
 if has_trust_interface; then
-    "$release" release "$instance" "$archive" --tag "$tag" >"$state/last-release.log" 2>&1 ||
+    "$release" release "$instance" "$archive" --tag "$tag" "${release_flags[@]}" >"$state/last-release.log" 2>&1 ||
         { log "Installation failed for $tag; see $state/last-release.log"; exit 1; }
 else
     "$release" release "$instance" "$archive" --repo "$repository" --repo-id "$repository_id" --tag "$tag" \
@@ -321,5 +350,5 @@ printf '%s\n' "$tools" >"$state/in-service-tools"
 for folder in "$state"/tools/*; do
     [[ $folder == "$tools" ]] || rm -rf -- "$folder"
 done
-rm -f -- "$archive" "$tools_archive"
+rm -f -- "$archive" "$tools_archive" "$archive.proof.json" "$tools_archive.proof.json"
 printf 'Installed %s; backup %s; public login answered successfully\n' "$tag" "$backup/database.dump"
