@@ -29,6 +29,8 @@ Use the packaged `server-tools/scripts/install-server.sh` and follow the [Platfo
 
 The public verifier also accepts `nightly-YYYY-MM-DD` for this trial repository and repository number. Use the exact tag and the corresponding archive; a nightly is a prerelease, while the latest official release remains a `setup-v` release. The Platform's release trust compares tags as `setup-vX.Y.Z`, so it does not yet accept a nightly tag: the updater installs a nightly only when the pinned trust accepts it, and otherwise reports why and leaves the running release in service.
 
+When `BILIBI_TRIAL_LOCAL_ONLY=1`, the updater makes no GitHub download. It installs a nightly built offline from local mirrors by `scripts/trial/build-local-nightly.sh`, delivered to the host inbox by `scripts/trial/deliver-local-nightly.sh`, and verifies it against an operator-signed proof and the trial operator trust policy instead of the public provenance check.
+
 ## Install a release
 
 Set the Software page's **GitHub repository** setting to your own application repository, for example `your-company/my-bilibi`. The server reads its releases from that repository.
