@@ -1,0 +1,7 @@
+[Unit]
+Description=Refresh Bilibi Try source mirrors at 05:00 Kuala Lumpur time
+[Timer]
+OnCalendar=*-*-* 05:00:00 Asia/Kuala_Lumpur
+AccuracySec=1s
+[Install]
+WantedBy=timers.target
